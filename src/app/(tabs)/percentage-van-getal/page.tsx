@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import { FillingBar } from '@/components/viz/FillingBar';
-import { StepExplanation } from '@/components/shared/StepExplanation';
-import { percentOfNumberSteps } from '@/lib/math/conversions';
+import { PercentageInsight, BuildingBlocksCard } from '@/components/shared/PercentageInsight';
 import { QUICK_PERCENTAGES } from '@/lib/constants';
 import { LessonShell } from '@/components/lesson/LessonShell';
 import { LessonStep } from '@/components/lesson/LessonStep';
@@ -25,19 +24,18 @@ function PercentageLesson({
   const step = lesson.steps[stepIndex];
   if (!step) return null;
 
-  const result = (percentage / 100) * number;
-  const steps = percentOfNumberSteps(percentage, number);
   const show = step.showComponents ?? [];
 
-  // For challenge steps, set the right number context
+  // For challenge steps, fix the number
   const targetNumber = step.id === '4-challenge1' ? 120 : step.id === '4-challenge2' ? 70 : number;
-  const challengeResult = (percentage / 100) * targetNumber;
-  const challengeSteps = percentOfNumberSteps(percentage, targetNumber);
-
-  // Use challenge number if in a challenge step
   const displayNumber = step.type === 'challenge' ? targetNumber : number;
-  const displayResult = step.type === 'challenge' ? challengeResult : result;
-  const displaySteps = step.type === 'challenge' ? challengeSteps : steps;
+  const displayResult = (percentage / 100) * displayNumber;
+
+  // For the intro step showing 50% of 80
+  const isFixedDemo = show.includes('fillingBar-50-80');
+  const demoPercentage = isFixedDemo ? 50 : percentage;
+  const demoNumber = isFixedDemo ? 80 : displayNumber;
+  const demoResult = (demoPercentage / 100) * demoNumber;
 
   return (
     <LessonStep
@@ -46,9 +44,20 @@ function PercentageLesson({
       percentage={percentage}
     >
       {/* Filling bar */}
-      {show.includes('fillingBar') && (
+      {(show.includes('fillingBar') || isFixedDemo) && (
         <div className="flex justify-center mb-4">
-          <FillingBar percentage={percentage} total={displayNumber} result={displayResult} />
+          <FillingBar
+            percentage={isFixedDemo ? 50 : percentage}
+            total={isFixedDemo ? 80 : displayNumber}
+            result={isFixedDemo ? 40 : displayResult}
+          />
+        </div>
+      )}
+
+      {/* Building blocks reference card */}
+      {show.includes('buildingBlocks') && (
+        <div className="mb-4">
+          <BuildingBlocksCard />
         </div>
       )}
 
@@ -93,7 +102,7 @@ function PercentageLesson({
       )}
 
       {/* Number slider */}
-      {show.includes('numberSlider') && !step.type?.startsWith('challenge') && (
+      {show.includes('numberSlider') && (
         <div className="bg-white rounded-2xl border border-gray-200 p-4 mb-3">
           <div className="flex justify-between items-center mb-2">
             <label className="text-sm font-medium text-gray-700">{t.percentageVanGetal.number}</label>
@@ -110,12 +119,12 @@ function PercentageLesson({
         </div>
       )}
 
-      {/* Step-by-step explanation */}
-      {show.includes('steps') && (
-        <div>
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">Zo reken je het uit:</h2>
-          <StepExplanation steps={displaySteps} />
-        </div>
+      {/* Intuitive insight (replaces dry StepExplanation) */}
+      {show.includes('insight') && (
+        <PercentageInsight
+          percentage={isFixedDemo ? 50 : percentage}
+          total={isFixedDemo ? 80 : displayNumber}
+        />
       )}
     </LessonStep>
   );
@@ -126,7 +135,6 @@ function PercentageFreePlay() {
   const [number, setNumber] = useState(80);
 
   const result = (percentage / 100) * number;
-  const steps = percentOfNumberSteps(percentage, number);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
@@ -136,10 +144,16 @@ function PercentageFreePlay() {
         <span className="font-semibold">{number}</span>?
       </p>
 
-      <div className="flex justify-center mb-8">
+      <div className="flex justify-center mb-6">
         <FillingBar percentage={percentage} total={number} result={result} />
       </div>
 
+      {/* Building blocks reference */}
+      <div className="mb-6">
+        <BuildingBlocksCard />
+      </div>
+
+      {/* Quick-tap buttons */}
       <div className="mb-6">
         <p className="text-xs text-gray-500 mb-2 font-medium">{t.percentageVanGetal.quickButtons}</p>
         <div className="flex gap-2">
@@ -159,6 +173,7 @@ function PercentageFreePlay() {
         </div>
       </div>
 
+      {/* Sliders */}
       <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-5 mb-6">
         <div>
           <div className="flex justify-between items-center mb-2">
@@ -190,10 +205,8 @@ function PercentageFreePlay() {
         </div>
       </div>
 
-      <div>
-        <h2 className="text-sm font-semibold text-gray-700 mb-3">Zo reken je het uit:</h2>
-        <StepExplanation steps={steps} />
-      </div>
+      {/* Intuitive insight */}
+      <PercentageInsight percentage={percentage} total={number} />
     </div>
   );
 }
