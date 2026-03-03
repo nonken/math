@@ -15,6 +15,7 @@ export function FillingBar({ percentage, total, result, height = 48, width = 280
   const [animatedWidth, setAnimatedWidth] = useState(0);
   const clampedPercent = Math.max(0, Math.min(100, percentage));
   const targetWidth = (clampedPercent / 100) * width;
+  const isFull = clampedPercent >= 100;
 
   useEffect(() => {
     setAnimatedWidth(0);
@@ -33,7 +34,10 @@ export function FillingBar({ percentage, total, result, height = 48, width = 280
       </div>
 
       {/* The bar */}
-      <div className="relative" style={{ width, height }}>
+      <div
+        className={`relative rounded-lg ${isFull ? 'glow-filled' : ''}`}
+        style={{ width, height, transition: 'box-shadow 0.5s ease' }}
+      >
         <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
           {/* Background */}
           <rect x={0} y={0} width={width} height={height} rx={8} fill={COLORS.unfilled} />
@@ -50,7 +54,11 @@ export function FillingBar({ percentage, total, result, height = 48, width = 280
         </svg>
         {/* Result label */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="font-bold text-lg" style={{ color: clampedPercent > 50 ? 'white' : '#374151' }}>
+          <span
+            key={resultStr}
+            className="font-bold text-lg animate-bounce-in"
+            style={{ color: clampedPercent > 50 ? 'white' : '#374151' }}
+          >
             {resultStr}
           </span>
         </div>

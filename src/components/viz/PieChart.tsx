@@ -36,10 +36,10 @@ export function PieChart({ numerator, denominator, size = 160, showLabels = true
 
   if (denominator === 0) return null;
 
-  // Special case: full circle
+  // Special case: full circle — with glow
   if (numerator === denominator) {
     return (
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="glow-svg-filled">
         <circle cx={cx} cy={cy} r={r} fill={COLORS.filled} stroke="white" strokeWidth="2" />
         {showLabels && (
           <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central" fontSize="14" fontWeight="bold" fill="white">

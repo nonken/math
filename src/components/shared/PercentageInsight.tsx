@@ -14,7 +14,7 @@ export function PercentageInsight({ percentage, total }: Props) {
   return (
     <div className="space-y-3">
       {/* Identity: what this percentage really IS */}
-      <div className="bg-primary-light rounded-2xl p-4 flex items-center gap-4">
+      <div className="tutor-bubble rounded-2xl p-4 flex items-center gap-4 animate-slide-up-bounce">
         {breakdown.fraction && (
           <div className="flex-shrink-0">
             <PieChart
@@ -30,16 +30,21 @@ export function PercentageInsight({ percentage, total }: Props) {
         </p>
       </div>
 
-      {/* Steps */}
+      {/* Steps — staggered entrance */}
       <div className="space-y-2">
         {breakdown.steps.map((step, i) => (
           <div
             key={i}
             className={`rounded-xl p-3 transition-all ${
               step.highlight
-                ? 'bg-filled-light border-2 border-filled/20'
+                ? 'bg-filled-light border-2 border-filled/20 animate-bounce-in'
                 : 'bg-gray-50'
             }`}
+            style={{
+              animation: step.highlight
+                ? undefined
+                : `stagger-in 0.3s ease-out ${i * 100}ms both`,
+            }}
           >
             <p className="text-xs text-gray-500 mb-0.5">{step.label}</p>
             <p className={`font-bold ${step.highlight ? 'text-filled text-lg' : 'text-gray-800'}`}>
@@ -49,9 +54,12 @@ export function PercentageInsight({ percentage, total }: Props) {
         ))}
       </div>
 
-      {/* Tip */}
+      {/* Tip — slides in */}
       {breakdown.tip && (
-        <div className="bg-amber-50 border border-amber-200/50 rounded-xl p-3 text-center">
+        <div
+          className="bg-amber-50 border border-amber-200/50 rounded-xl p-3 text-center animate-slide-up-bounce"
+          style={{ animationDelay: `${breakdown.steps.length * 100 + 100}ms` }}
+        >
           <p className="text-sm font-medium text-amber-700">
             Sneltruc: {breakdown.tip}
           </p>

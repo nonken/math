@@ -4,12 +4,12 @@ import { useState, useEffect } from 'react';
 import type { LessonStepDef } from '@/lib/lessons';
 
 // Reactions for lesson 1 (pizza exploration)
-const pizzaReactions: Record<number, string> = {
-  0: '0/4 \u2014 Je hebt niks gegeten!',
-  1: '1/4 \u2014 E\u00e9n stuk! ',
-  2: '2/4 \u2014 De helft!',
-  3: '3/4 \u2014 Bijna alles!',
-  4: '4/4 \u2014 Alles op!',
+const pizzaReactions: Record<number, { text: string; special?: boolean }> = {
+  0: { text: '0/4 — Je hebt niks gegeten!' },
+  1: { text: '1/4 — Eén stuk! ' },
+  2: { text: '2/4 — De helft!' },
+  3: { text: '3/4 — Bijna alles!' },
+  4: { text: '4/4 — Alles op! 🎉', special: true },
 };
 
 interface LessonStepProps {
@@ -41,7 +41,9 @@ export function LessonStep({
   const [showHint, setShowHint] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [inputError, setInputError] = useState(false);
+  const [isShaking, setIsShaking] = useState(false);
   const [isAhaVisible, setIsAhaVisible] = useState(false);
+  const [prevNumerator, setPrevNumerator] = useState(numerator);
 
   // Show hint after 10 seconds
   useEffect(() => {
@@ -50,6 +52,13 @@ export function LessonStep({
     const timer = setTimeout(() => setShowHint(true), 10000);
     return () => clearTimeout(timer);
   }, [step.id, step.hint]);
+
+  // Track numerator changes for pizza reaction animation
+  useEffect(() => {
+    setPrevNumerator(numerator);
+  }, [numerator]);
+
+  const reactionChanged = numerator !== prevNumerator;
 
   // Check if the target is met for slider interactions
   const isTargetMet = (() => {
@@ -82,6 +91,8 @@ export function LessonStep({
       onComplete();
     } else {
       setInputError(true);
+      setIsShaking(true);
+      setTimeout(() => setIsShaking(false), 400);
     }
   };
 
@@ -95,8 +106,8 @@ export function LessonStep({
   return (
     <div className="space-y-4">
       {/* Tutor speech bubble */}
-      <div className="bg-primary-light rounded-2xl p-4 relative">
-        <div className="absolute -top-2 left-6 w-4 h-4 bg-primary-light rotate-45" />
+      <div className="tutor-bubble rounded-2xl p-4 relative animate-slide-up-bounce">
+        <div className="absolute -top-2 left-6 w-4 h-4 tutor-bubble rotate-45" />
         <p className="text-sm text-gray-800 leading-relaxed relative z-10">
           {step.tutorText}
         </p>
@@ -104,8 +115,15 @@ export function LessonStep({
 
       {/* Pizza reaction (lesson 1) */}
       {showPizzaReaction && numerator !== undefined && pizzaReactions[numerator] && (
-        <div className="text-center text-sm font-medium text-primary animate-pulse">
-          {pizzaReactions[numerator]}
+        <div
+          key={numerator}
+          className={`text-center font-semibold ${
+            pizzaReactions[numerator].special
+              ? 'text-2xl text-celebration animate-bounce-in'
+              : 'text-base text-primary animate-slide-up-bounce'
+          }`}
+        >
+          {pizzaReactions[numerator].text}
         </div>
       )}
 
@@ -114,7 +132,7 @@ export function LessonStep({
 
       {/* Input field for text-based challenges */}
       {step.interaction === 'input' && (
-        <div className="flex gap-2">
+        <div className={`flex gap-2 ${isShaking ? 'animate-shake' : ''}`}>
           <input
             type="text"
             value={inputValue}
@@ -133,27 +151,30 @@ export function LessonStep({
           <button
             onClick={handleInputSubmit}
             disabled={!inputValue.trim()}
-            className="px-6 py-3 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-blue-700 transition-colors disabled:opacity-40"
+            className="px-6 py-3 rounded-xl btn-primary text-white font-semibold text-sm disabled:opacity-40"
           >
             Check
           </button>
         </div>
       )}
       {inputError && (
-        <p className="text-sm text-error">Dat klopt niet helemaal. Probeer het nog eens!</p>
+        <p className="text-sm text-error animate-fade-in">Dat klopt niet helemaal. Probeer het nog eens!</p>
       )}
 
       {/* Hint */}
       {showHint && step.hint && !isTargetMet && (
-        <p className="text-xs text-gray-400 italic animate-fade-in">
-          {step.hint}
-        </p>
+        <div className="animate-fade-in animate-float bg-amber-50 border border-amber-200/50 rounded-xl px-3 py-2 flex items-start gap-2">
+          <span className="text-base leading-none mt-0.5">💡</span>
+          <p className="text-xs text-amber-700 italic">
+            {step.hint}
+          </p>
+        </div>
       )}
 
       {/* Aha moment */}
       {isAhaVisible && step.ahaText && isTargetMet && (
-        <div className="bg-filled-light border border-filled/20 rounded-2xl p-4 text-center animate-fade-in">
-          <p className="text-sm font-semibold text-filled">{step.ahaText}</p>
+        <div className="bg-filled-light border-2 border-filled/30 rounded-2xl p-4 text-center animate-bounce-in animate-pulse-glow">
+          <p className="text-sm font-bold text-filled">{step.ahaText}</p>
         </div>
       )}
 
@@ -163,7 +184,7 @@ export function LessonStep({
         step.interaction !== 'input' && (
           <button
             onClick={onComplete}
-            className="w-full py-3 rounded-xl bg-primary text-white font-semibold hover:bg-blue-700 transition-colors"
+            className="w-full py-3 rounded-xl btn-primary text-white font-semibold"
           >
             Volgende &rarr;
           </button>
@@ -173,9 +194,9 @@ export function LessonStep({
         isTargetMet && (
           <button
             onClick={onComplete}
-            className="w-full py-3 rounded-xl bg-filled text-white font-semibold hover:bg-emerald-600 transition-colors animate-fade-in"
+            className="w-full py-3 rounded-xl btn-success text-white font-semibold animate-bounce-in animate-pulse-glow"
           >
-            {step.type === 'challenge' ? 'Goed zo! Volgende \u2192' : 'Volgende \u2192'}
+            {step.type === 'challenge' ? 'Goed zo! Volgende →' : 'Volgende →'}
           </button>
         )
       )}
@@ -188,7 +209,7 @@ export function LessonStep({
               key={v}
               className={`w-3 h-3 rounded-full transition-colors ${
                 triedValues.includes(v)
-                  ? 'bg-filled'
+                  ? 'bg-filled animate-scale-pop'
                   : 'bg-gray-200'
               }`}
             />

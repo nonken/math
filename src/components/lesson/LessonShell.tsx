@@ -56,12 +56,12 @@ export function LessonShell({ tabPath, renderLesson, children }: LessonShellProp
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
       {/* Lesson header */}
-      <div className="mb-4">
+      <div className="mb-4 animate-fade-in">
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-lg font-bold text-gray-900">
             Les {activeLessonId}: {lesson.title}
           </h1>
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-gray-400 font-medium">
             {currentStep + 1}/{totalSteps}
           </span>
         </div>
@@ -71,11 +71,11 @@ export function LessonShell({ tabPath, renderLesson, children }: LessonShellProp
           {lesson.steps.map((_, i) => (
             <div
               key={i}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
+              className={`h-2 flex-1 rounded-full transition-all duration-300 ${
                 i < currentStep
-                  ? 'bg-filled'
+                  ? 'bg-filled animate-scale-pop'
                   : i === currentStep
-                    ? 'bg-primary'
+                    ? 'bg-primary animate-gentle-pulse'
                     : 'bg-gray-200'
               }`}
             />
