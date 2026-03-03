@@ -2,17 +2,42 @@
 
 import { useState, useCallback } from 'react';
 import { useProgress } from '@/hooks/useProgress';
+import { useJourney } from '@/hooks/useJourney';
 import { generateQuestion, checkAnswer } from '@/lib/quiz/questionGenerator';
 import type { QuizQuestion } from '@/lib/quiz/questionTypes';
 import type { SkillKey } from '@/lib/progress/types';
 import { PieChart } from '@/components/viz/PieChart';
 import { PercentageBar } from '@/components/viz/PercentageBar';
 import { VisualFader } from '@/components/shared/VisualFader';
+import { LessonShell } from '@/components/lesson/LessonShell';
+import { LessonStep } from '@/components/lesson/LessonStep';
+import { lessons } from '@/lib/lessons';
 import { t } from '@/lib/i18n';
 
 type Phase = 'idle' | 'question' | 'feedback';
 
-export default function QuizPage() {
+function QuizLesson({
+  stepIndex,
+  onAdvance,
+}: {
+  stepIndex: number;
+  onAdvance: () => void;
+}) {
+  const lesson = lessons.find((l) => l.id === 7);
+  if (!lesson) return null;
+  const step = lesson.steps[stepIndex];
+  if (!step) return null;
+
+  return (
+    <LessonStep step={step} onComplete={onAdvance}>
+      <div className="text-center py-4">
+        <div className="text-5xl mb-2">&#129504;</div>
+      </div>
+    </LessonStep>
+  );
+}
+
+function QuizFreePlay() {
   const { progress, recordAnswer } = useProgress();
   const [phase, setPhase] = useState<Phase>('idle');
   const [question, setQuestion] = useState<QuizQuestion | null>(null);
@@ -85,7 +110,7 @@ export default function QuizPage() {
       {/* Idle state */}
       {phase === 'idle' && (
         <div className="text-center py-12">
-          <div className="text-6xl mb-4">🧠</div>
+          <div className="text-6xl mb-4">&#129504;</div>
           <p className="text-gray-600 mb-6">
             Test je kennis over breuken, decimalen en procenten!
           </p>
@@ -101,7 +126,6 @@ export default function QuizPage() {
       {/* Question */}
       {phase === 'question' && question && (
         <div className="space-y-6">
-          {/* Visual hint */}
           {question.visual && (
             <VisualFader skill={question.skill}>
               <div className="flex justify-center">
@@ -127,7 +151,6 @@ export default function QuizPage() {
             </VisualFader>
           )}
 
-          {/* Question prompt */}
           <div className="bg-white rounded-2xl border border-gray-200 p-5">
             <p className="text-lg font-semibold text-gray-900 mb-4">{question.prompt}</p>
 
@@ -170,13 +193,12 @@ export default function QuizPage() {
       {/* Feedback */}
       {phase === 'feedback' && question && (
         <div className="space-y-4">
-          {/* Result banner */}
           <div
             className={`rounded-2xl p-5 text-center ${
               isCorrect ? 'bg-filled-light' : 'bg-error-light'
             }`}
           >
-            <div className="text-3xl mb-1">{isCorrect ? '🎉' : '🤔'}</div>
+            <div className="text-3xl mb-1">{isCorrect ? '\ud83c\udf89' : '\ud83e\udd14'}</div>
             <p className={`font-bold text-lg ${isCorrect ? 'text-filled' : 'text-error'}`}>
               {isCorrect ? t.quiz.correct : t.quiz.incorrect}
             </p>
@@ -187,13 +209,11 @@ export default function QuizPage() {
             )}
           </div>
 
-          {/* Explanation (always shown for wrong, briefly for correct) */}
           {!isCorrect && (
             <div className="bg-white rounded-2xl border border-gray-200 p-5">
               <p className="text-sm font-semibold text-gray-700 mb-2">{t.quiz.hereIsWhy}</p>
               <p className="text-sm text-gray-600">{question.explanation}</p>
 
-              {/* Force-show visual for wrong answers */}
               {question.visual && (
                 <div className="flex justify-center mt-4">
                   {question.visual.type === 'pie' &&
@@ -214,7 +234,6 @@ export default function QuizPage() {
             </div>
           )}
 
-          {/* Next button */}
           <button
             onClick={nextQuestion}
             className="w-full py-3 rounded-xl bg-primary text-white font-semibold hover:bg-blue-700 transition-colors"
@@ -224,5 +243,18 @@ export default function QuizPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function QuizPage() {
+  return (
+    <LessonShell
+      tabPath="/quiz"
+      renderLesson={(_lessonId, stepIndex, onAdvance) => (
+        <QuizLesson stepIndex={stepIndex} onAdvance={onAdvance} />
+      )}
+    >
+      <QuizFreePlay />
+    </LessonShell>
   );
 }

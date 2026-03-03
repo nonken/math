@@ -6,19 +6,19 @@ interface FractionBarProps {
   numerator: number;
   denominator: number;
   height?: number;
-  width?: number;
   showLabel?: boolean;
 }
 
-export function FractionBar({ numerator, denominator, height = 40, width = 240, showLabel = true }: FractionBarProps) {
+export function FractionBar({ numerator, denominator, height = 40, showLabel = true }: FractionBarProps) {
   if (denominator === 0) return null;
 
-  const segmentWidth = width / denominator;
+  const vw = 240;
+  const segmentWidth = vw / denominator;
 
   return (
-    <div className="flex flex-col items-center">
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
-        <rect x={0} y={0} width={width} height={height} rx={6} fill={COLORS.unfilled} />
+    <div className="flex flex-col items-center w-full">
+      <svg viewBox={`0 0 ${vw} ${height}`} className="w-full" preserveAspectRatio="xMidYMid meet">
+        <rect x={0} y={0} width={vw} height={height} rx={6} fill={COLORS.unfilled} />
         {Array.from({ length: denominator }).map((_, i) => (
           <rect
             key={i}
@@ -31,7 +31,6 @@ export function FractionBar({ numerator, denominator, height = 40, width = 240, 
             className="transition-all duration-300"
           />
         ))}
-        {/* Divider lines */}
         {Array.from({ length: denominator - 1 }).map((_, i) => (
           <line
             key={`line-${i}`}

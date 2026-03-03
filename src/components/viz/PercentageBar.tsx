@@ -18,9 +18,9 @@ export function PercentageBar({ percentage, height = 32, width = 240, showLabel 
     : parseFloat(percentage.toFixed(2)).toString();
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="relative" style={{ width, height }}>
-        <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+    <div className="flex flex-col items-center w-full">
+      <div className="relative w-full">
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full" preserveAspectRatio="xMidYMid meet">
           <rect x={0} y={0} width={width} height={height} rx={height / 2} fill={COLORS.unfilled} />
           <rect
             x={0}
