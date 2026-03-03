@@ -12,5 +12,9 @@ export default function Home() {
     router.replace(getCurrentTab());
   }, [router, getCurrentTab]);
 
-  return null;
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center text-gray-400">Laden...</div>
+    </div>
+  );
 }
