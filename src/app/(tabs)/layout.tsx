@@ -1,4 +1,7 @@
+'use client';
+
 import { TabBar } from '@/components/layout/TabBar';
+import { JourneyProvider } from '@/hooks/useJourney';
 
 export default function TabsLayout({
   children,
@@ -6,11 +9,13 @@ export default function TabsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen lg:pl-56">
-      <TabBar />
-      <main className="pb-20 lg:pb-0">
-        {children}
-      </main>
-    </div>
+    <JourneyProvider>
+      <div className="min-h-screen lg:pl-56">
+        <TabBar />
+        <main className="pb-20 lg:pb-0">
+          {children}
+        </main>
+      </div>
+    </JourneyProvider>
   );
 }

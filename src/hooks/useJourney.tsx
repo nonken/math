@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback } from 'react';
+import { createContext, useContext, useCallback, type ReactNode } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import { lessons, tabLessons } from '@/lib/lessons';
 
@@ -13,7 +13,6 @@ export interface JourneyState {
   currentLesson: number;
   lessonProgress: Record<number, LessonProgress>;
   unlockedTabs: string[];
-  // Track which numerator values have been tried (for lesson 1)
   triedValues: Record<string, number[]>;
 }
 
@@ -26,7 +25,23 @@ const DEFAULT_JOURNEY: JourneyState = {
   triedValues: {},
 };
 
-export function useJourney() {
+interface JourneyContextValue {
+  journey: JourneyState;
+  isTabUnlocked: (tabPath: string) => boolean;
+  isLessonCompleted: (lessonId: number) => boolean;
+  getLessonProgress: (lessonId: number) => LessonProgress;
+  getActiveLessonForTab: (tabPath: string) => number | null;
+  areAllTabLessonsComplete: (tabPath: string) => boolean;
+  advanceStep: (lessonId: number) => void;
+  recordTriedValue: (stepId: string, value: number) => void;
+  getTriedValues: (stepId: string) => number[];
+  resetJourney: () => void;
+  getCurrentTab: () => string;
+}
+
+const JourneyContext = createContext<JourneyContextValue | null>(null);
+
+export function JourneyProvider({ children }: { children: ReactNode }) {
   const [journey, setJourney] = useLocalStorage<JourneyState>('math-journey', DEFAULT_JOURNEY);
 
   const isTabUnlocked = useCallback(
@@ -45,7 +60,6 @@ export function useJourney() {
     [journey.lessonProgress]
   );
 
-  // Get the active lesson for a specific tab (first uncompleted lesson on that tab)
   const getActiveLessonForTab = useCallback(
     (tabPath: string): number | null => {
       const lessonIds = tabLessons[tabPath];
@@ -53,7 +67,7 @@ export function useJourney() {
       for (const id of lessonIds) {
         if (!journey.lessonProgress[id]?.completed) return id;
       }
-      return null; // All lessons on this tab completed = free-play
+      return null;
     },
     [journey.lessonProgress]
   );
@@ -89,16 +103,13 @@ export function useJourney() {
         let newCurrentLesson = prev.currentLesson;
 
         if (isComplete) {
-          // Unlock next tab if this lesson unlocks one
           if (lesson.unlocksTab && !newUnlockedTabs.includes(lesson.unlocksTab)) {
             newUnlockedTabs.push(lesson.unlocksTab);
           }
 
-          // Advance to next lesson
           const nextLesson = lessons.find((l) => l.id === lessonId + 1);
           if (nextLesson) {
             newCurrentLesson = nextLesson.id;
-            // Initialize progress for next lesson
             if (!newProgress[nextLesson.id]) {
               newProgress[nextLesson.id] = { step: 0, completed: false };
             }
@@ -142,13 +153,12 @@ export function useJourney() {
     setJourney(DEFAULT_JOURNEY);
   }, [setJourney]);
 
-  // Get which tab the current lesson is on
   const getCurrentTab = useCallback(() => {
     const lesson = lessons.find((l) => l.id === journey.currentLesson);
     return lesson?.tab ?? '/verken';
   }, [journey.currentLesson]);
 
-  return {
+  const value: JourneyContextValue = {
     journey,
     isTabUnlocked,
     isLessonCompleted,
@@ -161,4 +171,18 @@ export function useJourney() {
     resetJourney,
     getCurrentTab,
   };
+
+  return (
+    <JourneyContext.Provider value={value}>
+      {children}
+    </JourneyContext.Provider>
+  );
+}
+
+export function useJourney(): JourneyContextValue {
+  const ctx = useContext(JourneyContext);
+  if (!ctx) {
+    throw new Error('useJourney must be used within a JourneyProvider');
+  }
+  return ctx;
 }

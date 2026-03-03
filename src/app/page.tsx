@@ -2,9 +2,9 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useJourney } from '@/hooks/useJourney';
+import { JourneyProvider, useJourney } from '@/hooks/useJourney';
 
-export default function Home() {
+function HomeRedirect() {
   const router = useRouter();
   const { getCurrentTab } = useJourney();
 
@@ -16,5 +16,13 @@ export default function Home() {
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center text-gray-400">Laden...</div>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <JourneyProvider>
+      <HomeRedirect />
+    </JourneyProvider>
   );
 }
